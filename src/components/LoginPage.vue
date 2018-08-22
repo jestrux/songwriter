@@ -24,39 +24,10 @@
         z-index: 1;
         overflow: hidden;
     }
-
-    body.loading #loginForm{
-        opacity: 0;
-    }
     
     #loginForm #loader{
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 1;
         background: rgba(255, 255, 255, 0.97);
-        text-transform: uppercase;
-        padding-bottom: 20px;
         color: #854dfe;
-        transition: all 0.35s ease-out;
-    }
-
-    #loginForm #loader span{
-        width: 90px;
-        height: 90px;
-        border-radius: 50%;
-        border: 4px dashed #1ddc6a;
-        border-left-width: 2px;
-        border-bottom-width: 2px;
-        margin-bottom: 1.5em;
-
-        animation: roll 0.7s ease-out infinite alternate;
     }
 
     #loginForm:not(.signing-in) #loader {
@@ -99,29 +70,25 @@
         background: #333;
     }
 
-    body.logged-in #loginWrapper{
+    #loginWrapper.logged-in{
         pointer-events: none;
     }
 
-    body.logged-in #loginForm{
+    #loginWrapper.logged-in #loginForm{
         transform: translateY(-50%);
         opacity: 0;
         transition: all 0.35s ease-out;
     }
 
-    body.logged-in #loginWrapper:before{
+    #loginWrapper.logged-in:before{
         opacity: 0;
         transition: all 0.35s ease-out;
-    }
-
-    #loginWrapper{
-        /* display: none; */
     }
 </style>
 
 <template>
-    <div id="loginWrapper">
-        <div id="loginForm">
+    <div id="loginWrapper" :class="{'logged-in': loggedin}">
+        <div id="loginForm" :class="{'signing-in': signingin, 'has-qr': !signingin}">
             <div id="loader">
                 <span></span>
                 Signing in...
@@ -137,10 +104,6 @@
                 <qrcode :value="qrcode" :options="{ size: 200 }"></qrcode>
                 <span style="margin-top: 1.5em">Scan the QR Code using app to login.</span>
             </template>
-            
-            <!-- <button @click="createLoginSession()">
-                LOGIN WITH QR
-            </button> -->
         </div>
     </div>
 </template>
@@ -149,25 +112,41 @@
     import { linksRef, auth } from "../firebase";
     import VueQrcode from '@xkeshi/vue-qrcode';
     
+    var self;
+
     export default {
         name: 'LoginPage',
 
-        data(){
-            return {
-                qrcode: null
+        props: {
+            loggedin : {
+                type: Boolean,
+                default: true
             }
         },
 
-        mounted(){
-            this.createLoginSession();
+        watch: {
+            loggedin: {
+                handler: function (loggedin) {
+                    if(!loggedin){
+                        this.createLoginSession();
+                    }
+                },
+                immediate: true
+            }
+        },
+
+        data(){
+            return {
+                qrcode: null,
+                signingin: false
+            }
         },
 
         methods: {
             createLoginSession: function(){
-                const self = this;
+                self = this;
                 linksRef.add({email: "nan", password: "1234"})
                     .then(function (ref) {
-                        console.log(ref.id);
                         self.qrcode = ref.id;
                         self._listenForchanges(ref.id);
                     })
@@ -176,16 +155,12 @@
                     });
             },
             _listenForchanges: function(id){
-                const self = this;
-                var linkRef = linksRef.doc(id);
+                const linkRef = linksRef.doc(id);
 
-                console.log(id);
-                var unsubscribe = linkRef.onSnapshot(function (doc) {
+                const unsubscribe = linkRef.onSnapshot(function (doc) {
                     var res = doc.data();
-                    console.log(res);
                     if(res.email !== "nan"){
-                        document.getElementById("loginForm").classList.remove("has-qr");
-                        document.getElementById("loginForm").classList.add("signing-in");
+                        self.signingin = true;
                         self.loginUser(res);
                         linkRef.delete();
                         unsubscribe();
@@ -195,24 +170,13 @@
                 });
             },
             loginUser: function(user){
-                var self =  this;
-                auth.setPersistence("local") //SESSION
-                .then(function () {
-                    return auth.signInWithEmailAndPassword(user.email, user.password);
-                })
-                .then(function(result){
-                    var res = result.user;
-                    console.log(res);
-                    var user = {
-                        id: res.uid,
-                        name: res.displayName,
-                        image: res.photoURL
-                    };
-                    self.$emit("login", user);
-                }).catch(function (error) {
-                    let errorCode = error.code;
-                    let errorMessage = error.message;
-                    console.log(error);
+                auth.setPersistence("local")
+                .then(() => auth.signInWithEmailAndPassword(user.email, user.password))
+                .then(() => self.signingin = false)
+                .catch(function (error) {
+                    // let errorCode = error.code;
+                    // let errorMessage = error.message;
+                    console.log("Signing in error", error);
                 });
             }
         },

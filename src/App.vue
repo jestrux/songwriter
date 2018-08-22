@@ -1,34 +1,4 @@
 <style scoped>
-  #wrapper > #loader {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: #333;
-    color: #e9e9e9;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-family: 'Courier New', Courier, monospace;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.35s ease-out;
-  }
-
-  #wrapper > #loader span {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    border: 4px dashed #1ddc6a;
-    border-left-width: 2px;
-    border-bottom-width: 2px;
-    margin-bottom: 2em;
-    animation: roll 0.7s ease-out infinite alternate;
-  }
-
   #appWrapper{
     position: fixed;
     top: 0;
@@ -94,7 +64,7 @@
         </div>
     </div>
     
-    <login-page v-if="user_fetched && no_user"></login-page>
+    <login-page :loggedin="user_fetched && !no_user"></login-page>
   </div>
 </template>
 

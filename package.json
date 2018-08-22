@@ -1,5 +1,5 @@
 {
-  "name": "muziki",
+  "name": "songwriter",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "@xkeshi/vue-qrcode": "^1.0.0",
+    "EventEmitter": "^1.0.0",
     "autosize": "^4.0.2",
     "vue-router": "^3.0.1",
+    "vue-textarea-autosize": "^1.0.4",
     "vuex": "^3.0.1"
   },
   "devDependencies": {
@@ -27,5 +29,12 @@
     "vue-template-compiler": "^2.5.17",
     "vuefire": "^2.0.0-alpha.14"
   },
-  "main": "dist_electron/bundled/background.js"
+  "main": "dist_electron/bundled/background.js",
+  "build": {
+    "appId": "com.jesstrux.songwriter",
+    "productName": "Song Writer",
+    "mac": {
+      "icon": "dist_electron/bundled/logo.png"
+    }
+  }
 }

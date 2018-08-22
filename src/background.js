@@ -15,7 +15,7 @@ let mainWindow
 // Standard scheme must be registered before the app is ready
 protocol.registerStandardSchemes(['app'], { secure: true })
 function createMainWindow () {
-  const window = new BrowserWindow({ width: 1200, height: 800 })
+  const window = new BrowserWindow({ width: 1200, height: 800, backgroundColor: "#252525" })
 
   if (isDevelopment) {
     window.loadURL(process.env.WEBPACK_DEV_SERVER_URL)

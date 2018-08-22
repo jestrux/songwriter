@@ -6,17 +6,35 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
-    <title>muziki</title>
+    <title>Song Writer</title>
 
     <style>
-      *{
-        box-sizing: border-box;
-        user-select: none;
+      body{
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
       }
+      *{box-sizing: border-box;user-select: none;}
+      #loader { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #333; color: #e9e9e9; text-transform:
+      uppercase; letter-spacing: 1px; font-family: 'Courier New', Courier, monospace; z-index: 10; display: flex; flex-direction:
+      column; align-items: center; justify-content: center; transition: opacity 0.35s ease-out; } #loader span { width: 50px; height:
+      50px; border-radius: 50%; border: 4px dashed #1ddc6a; border-left-width: 2px; border-bottom-width: 2px; margin-bottom: 2em;
+      animation: roll 0.7s ease-out infinite alternate; }
+      #loader.hide{opacity: 0;pointer-events: none}
       @keyframes roll{ 50%{ transform: rotate(80deg); } 100%{ transform: rotate(160deg); } }
     </style>
+
+    <script>
+      function loaded() {
+        document.querySelector(".base-loader").classList.add("hide");
+      }
+
+      window.addEventListener("dragover",function(e){ e = e || event; e.preventDefault(); },false); window.addEventListener("drop",function(e){
+      e = e || event; e.preventDefault(); },false);
+    </script>
   </head>
-  <body>
+  <body onload="loaded()">
+    <div id="loader" class="base-loader"><span></span>Loading...</div>
     <noscript>
       <strong>We're sorry but muziki doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
     </noscript>
