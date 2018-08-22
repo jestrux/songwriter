@@ -1,31 +1,164 @@
+<style scoped>
+  #wrapper > #loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #333;
+    color: #e9e9e9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Courier New', Courier, monospace;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.35s ease-out;
+  }
+
+  #wrapper > #loader span {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 4px dashed #1ddc6a;
+    border-left-width: 2px;
+    border-bottom-width: 2px;
+    margin-bottom: 2em;
+    animation: roll 0.7s ease-out infinite alternate;
+  }
+
+  #appWrapper{
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #appWrapper:before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 30%;
+    max-height: 400px;
+    background: #61e997;
+    display: none;
+    /* opacity: 0; */
+    /* transform: translateY(-70%); */
+  }
+
+  #app{
+    width: 100vw;
+    height: 100vh;
+    max-width: 1400px;
+    max-height: 980px;
+    display: flex;
+    background: #fff;
+    border: 1px solid #ddd;
+    box-shadow: 3px 3px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  body.logged-in #app,
+  body.logged-in #appWrapper:before{
+    transform: none;
+    opacity: 1;
+    transition: all 0.35s ease-out 0.25s;
+  }
+
+  #app #list,
+  #app #detail {
+    background: #fff;
+    z-index: 1;
+  }
+</style>
+
 <template>
-  <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
+  <div id="wrapper">
+    <div id="loader" v-if="!user_fetched">
+        <span></span>
+        Loading...
     </div>
-    <router-view/>
+
+    <div id="appWrapper" v-if="user_fetched && !no_user">
+        <div id="app">
+            <song-list :userid="user.id" :username="user.name" :userimage="user.image"
+                      @logout="logout" @viewsong="viewSong"/>
+            <song-detail :song="cursong"></song-detail>
+        </div>
+    </div>
+    
+    <login-page v-if="user_fetched && no_user"></login-page>
   </div>
 </template>
 
-<style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
-#nav {
-  padding: 30px;
-}
+<script>
+  import { auth } from "./firebase";
+  import LoginPage from './components/LoginPage.vue'
+  import SongList from './components/SongList.vue'
+  import SongDetail from './components/SongDetail.vue'
 
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
+  export default {
+    data(){
+      return {
+        cursong: {},
+        user: {},
+        no_user: true,
+        user_fetched: false
+      }
+    },
 
-#nav a.router-link-exact-active {
-  color: #42b983;
-}
-</style>
+    mounted: function(){
+      var self = this;
+      auth.onAuthStateChanged((res_user) => {
+        this.user_fetched = true;
+        if (res_user) {
+            var user = {
+                id: res_user.uid,
+                name: res_user.displayName,
+                email: res_user.email,
+                image: res_user.photoURL,
+            }
+
+            self.setUser(user);
+            console.log("Signed In", user);
+        }else{
+          self.no_user = true;
+          console.log("Signed Out: ");
+        }
+      });
+    },
+    
+    methods: {
+      setUser: function(user){
+        if(this.no_user){
+          this.user = user;
+          this.no_user = false;
+        }
+      },
+      viewSong: function(song){
+        this.cursong = song
+      },
+      logout: function(){
+        auth.signOut();
+        this.no_user = true;
+      }
+    },
+
+    components : {
+      'login-page' : LoginPage,
+      'song-list' : SongList,
+      'song-detail' : SongDetail
+    },
+
+    filters: {
+      json: s => JSON.stringify(s)
+    }
+  }
+</script>
