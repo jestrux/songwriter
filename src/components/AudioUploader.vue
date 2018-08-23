@@ -40,6 +40,8 @@
   import {em, Init} from "../filedrag";
   import {storage, filesRef} from "../firebase";
 
+  // TODO: Fix second upload error
+
   var self;
   
   export default {
