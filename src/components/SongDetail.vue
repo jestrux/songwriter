@@ -118,7 +118,7 @@
           id="songEdit"
           v-model="lyrics"
           placeholder="Enter lyrics here...."
-          @keyup="saveSong"/>
+          @keyup.native="saveSong"/>
       </div>
 
       <div id="audios">
