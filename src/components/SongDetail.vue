@@ -28,6 +28,7 @@
         color: #ccc;
         font-size: 1.5em;
         letter-spacing: 1px;
+        z-index: 1;
     }
 
     #wrapper{
@@ -49,9 +50,6 @@
       line-height: 1.5;
       border: none;
       outline: none;
-      /* overflow: hidden; */
-      /* min-height: 100vh; */
-      /* max-height: 300px; */
     }
 
     #audios{
@@ -62,12 +60,9 @@
       border-left: 1px solid #eee;
       height: 100vh;
     }
-
-    #title, .audio{
-      padding: 0 1em;
-    }
     
     #title{
+      padding: 0 1em;
       display: flex;
       align-items: center;
       height: 63px;
@@ -101,6 +96,16 @@
       overflow: auto;
       border-top: 1px solid #eee;
     }
+
+    .audio{
+      padding: 1em;
+      border-bottom: 1px solid #f3f3f3;
+      cursor: default;
+    }
+    
+    .audio.current{
+      background: #f8f8f8;
+    }
 </style>
 
 <template>
@@ -120,15 +125,23 @@
       <div id="audios">
         <div id="title">
           <h3>Audios</h3>
-          <button @click="addAudio">ADD AUDIO</button>
+          <button @click="recording = true" v-if="!recording">RECORD AUDIO</button>
         </div>
 
         <div id="audioListWrapper">
 
-          <audio-uploader></audio-uploader>
+          <audio-uploader v-if="!recording" @newaudio="pushAudio"/>
+          <audio-recorder v-if="recording" @cancel="recording = false" @newaudio="pushAudio"/>
+
+          <audio :src="cursrc" autoplay controls v-if="audios && audios.length"></audio>
 
           <div id="audioList">
-            
+            <div class="audio" 
+              v-for="(audio, index) in audios" :key="index"
+              :class="{'current' : cursrc == audio.url}"
+              @click="cursrc = audio.url">
+              {{audio.name}}
+            </div>
           </div>
         </div>
       </div>
@@ -141,6 +154,9 @@
   import _ from 'lodash'
 
   import AudioUploader from "./AudioUploader";
+  import AudioRecorder from "./AudioRecorder";
+
+  var audiosRef;
 
   export default {
     name: 'SongDetail',
@@ -150,11 +166,26 @@
 
     data: function() {
       return{
-          hovered: false
+          hovered: false,
+          audios: [],
+          cursrc: "",
+          recording: false
       }
     },
 
     watch: {
+      song: {
+        immediate: true,
+        deep: true,
+        handler: function(newsong, oldsong){
+          this.cursrc = "";
+
+          if(!newsong.path)
+            return;
+
+          this.fetchAudios();
+        }
+      },
       lyrics: function (lyrics, old_lyrics) {
         if(!lyrics && !old_lyrics){
           return;
@@ -175,19 +206,53 @@
         set: function(lyrics){
           this.song.description = lyrics;
         }
-      },
-      audios:{
-        get: function(){
-          return this.song && this.song.audios ? this.song.audios : null;
-        },
-        set: function(lyrics){
-          // this.song.audios = audios;
-        }
       }
     },
     methods: {
       addAudio: function(){
 
+      },
+      fetchAudios: function(url){
+        var self = this;
+        audiosRef = db.collection(this.song.path + "/audios");
+
+        audiosRef.orderBy("last_modified", "desc").get()
+            .then(function (audios) {
+                self.audios = [];
+
+                if (audios.length < 1)
+                    return;
+
+                audios.forEach(function (doc) {
+                    var audio = doc.data();
+                    audio.id = doc.ref.id;
+                    audio.path = doc.ref.path;
+                    self.audios.push(audio);
+
+                    console.log(audio);
+                });
+            })
+            .catch(function (error) {
+                console.log("Error getting documents: ", error);
+                // reject(error);
+                resolve([]);
+            });
+      },
+      pushAudio: function(name, url){
+        this.recording = false;
+        let self = this;
+        let audio = {name: name, url: url, last_modified: new Date()};
+        audiosRef.add(audio)
+          .then(function(docRef) {
+            console.log("Audio saved!");
+            audio.path = docRef.path;
+            audio.id = docRef.id;
+
+            self.audios.unshift(audio)
+          })
+          .catch(function(error) {
+            console.error("Error saving audio", error);
+          });
       },
       saveSong: _.debounce(
         function () {
@@ -204,7 +269,8 @@
       )
     },
     components: {
-      'audio-uploader': AudioUploader
+      'audio-uploader': AudioUploader,
+      'audio-recorder': AudioRecorder
     }
   }
 </script>

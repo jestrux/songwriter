@@ -5,7 +5,7 @@ import VueTextareaAutosize from 'vue-textarea-autosize'
 
 Vue.use(VueTextareaAutosize)
 
-Vue.config.productionTip = false
+Vue.config.productionTip = true
 
 new Vue({
   store,

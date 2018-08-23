@@ -1,11 +1,12 @@
 <style scoped>
     #audioDrop{
+      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 150px;
-      background: #f8f8f8;
+      background: #e8e8e8;
       border-bottom: 1px solid #eee;
       padding: 1em;
       text-align: center;
@@ -17,33 +18,64 @@
       border-color: #ccc;
       margin: 2px;
     }
+
+    #loader{
+      background: rgba(255, 255, 255, 0.97);
+      color: #854dfe;
+    }
 </style>
 
 <template>
-    <div id="audioDrop" :class="{'full' : !audios}">
+    <div id="audioDrop">
       Drop your audio here to add to song audios.
+
+      <div id="loader" v-if="uploading">
+        <span></span>
+        Uploading... {{progress}}%
+      </div>
     </div>
 </template>
 
 <script>
   import {em, Init} from "../filedrag";
+  import {storage, filesRef} from "../firebase";
 
+  var self;
+  
   export default {
-    props: {
-      audios:{
-        default: null
+    data: function() {
+      return{
+          uploading: false,
+          progress: 0
       }
     },
     mounted: function() {
+      self = this;
       Init(this.$el);
 
-      em.once('loaded', function(len) {
-        console.log(`${len} files loaded!!!`);
+      em.once('loaded', function(file, src) {
+        uploadAudio(file, src);
       });
     },
     methods: {
-      processAudio: function(){
-        console.log("Processing audio...");
+      uploadAudio: function(file, src){
+        let uploadTask = filesRef(file.name).put(file);
+        self.uploading = true;
+
+        uploadTask.on('state_changed', function(snapshot){
+          var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log('Upload is ' + progress + '% done');
+          self.progress = parseInt(progress);
+        }, function(error) {
+          console.log("Upload failed, ", error);
+          self.uploading = false;
+        }, function() {
+          uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
+            self.uploading = false;
+            console.log('File available at', downloadURL);
+            self.$emit("newaudio", file.name.split(".").shift(), downloadURL);
+          });
+        });
       }
     }
   }

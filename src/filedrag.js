@@ -3,7 +3,6 @@ export let em;
 export function Init(el) {
     em = new EM();
 
-    console.log("Listen on: ", el);
     el.addEventListener("dragover", FileDragHover, false);
     el.addEventListener("dragleave", FileDragHover, false);
     el.addEventListener("drop", FileSelectHandler, false);
@@ -21,24 +20,20 @@ function FileDragHover(e) {
 function FileSelectHandler(e) {
     e.stopPropagation();
     e.preventDefault();
-    // cancel event and hover styling
     FileDragHover(e);
 
-    // fetch FileList object
     var files = e.target.files || e.dataTransfer.files;
 
-    // process all File objects
     for (var i = 0; i < files.length; i++) {
-        let f = files[i];
-        var type;
+        let file = files[i];
 
-        if (f.type.indexOf("audio") != -1)
-            type = "audio";
-        else
-            continue;
+        // if (file.type.indexOf("audio") == -1)
+        //     continue;
 
-        console.log(type);
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            em.emit("loaded", file, e.target.result);
+        }
+        reader.readAsDataURL(file);
     }
-
-    em.emit("loaded", files.length);
 }
