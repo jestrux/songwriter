@@ -118,8 +118,7 @@
           id="songEdit"
           v-model="lyrics"
           placeholder="Enter lyrics here...."
-          @keyup.alt.86="saveSong"
-          @keyup.meta.86="saveSong"/>
+          @keyup="saveSong"/>
       </div>
 
       <div id="audios">
@@ -178,20 +177,16 @@
         immediate: true,
         deep: true,
         handler: function(newsong, oldsong){
-          this.cursrc = "";
-
+          if(!newsong || !oldsong || (newsong.path != oldsong.path)){
+            this.cursrc = ""; //clean out audio player when new song comes in
+            this.audios = [];
+          }
+          
           if(!newsong.path)
             return;
 
           this.fetchAudios();
         }
-      },
-      lyrics: function (lyrics, old_lyrics) {
-        if(!lyrics && !old_lyrics){
-          return;
-        }
-
-        this.saveSong();
       }
     },
 
@@ -208,6 +203,7 @@
         }
       }
     },
+
     methods: {
       addAudio: function(){
 

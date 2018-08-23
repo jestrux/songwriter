@@ -56,15 +56,18 @@
         Loading...
     </div>
 
-    <div id="appWrapper" v-if="user_fetched && !no_user">
-        <div id="app">
-            <song-list :userid="user.id" :username="user.name" :userimage="user.image"
-                      @logout="logout" @viewsong="viewSong"/>
-            <song-detail :song="cursong"></song-detail>
-        </div>
-    </div>
+    <template v-if="user_fetched">
+      <div id="appWrapper" v-if="!no_user">
+          <div id="app">
+              <song-list :userid="user.id" :username="user.name" :userimage="user.image"
+                        @logout="logout" @viewsong="viewSong"/>
+              <song-detail :song="cursong"></song-detail>
+          </div>
+      </div>
+      
+      <login-page :loggedin="!no_user"></login-page>
+    </template>
     
-    <login-page :loggedin="user_fetched && !no_user"></login-page>
   </div>
 </template>
 
@@ -79,7 +82,7 @@
       return {
         cursong: {},
         user: {},
-        no_user: true,
+        no_user: false,
         user_fetched: false
       }
     },
@@ -107,10 +110,8 @@
     
     methods: {
       setUser: function(user){
-        if(this.no_user){
-          this.user = user;
-          this.no_user = false;
-        }
+        this.user = user;
+        this.no_user = false;
       },
       viewSong: function(song){
         this.cursong = song

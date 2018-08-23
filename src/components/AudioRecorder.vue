@@ -169,8 +169,11 @@
         this.$emit("cancel");
       },
       uploadAudio: function(){
+        var newMetadata = {
+          cacheControl: 'public,max-age=5184000'
+        };
         const name = "Rec" + (Math.random() * 1e32).toString(36);
-        let uploadTask = filesRef(name).put(this.blob);
+        let uploadTask = filesRef(name).put(this.blob, newMetadata);
         this.uploading = true;
         this.src = null;
         this.blob = null;

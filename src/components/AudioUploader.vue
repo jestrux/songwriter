@@ -54,12 +54,16 @@
       Init(this.$el);
 
       em.once('loaded', function(file, src) {
-        uploadAudio(file, src);
+        self.uploadAudio(file, src);
       });
     },
     methods: {
       uploadAudio: function(file, src){
-        let uploadTask = filesRef(file.name).put(file);
+        var newMetadata = {
+          cacheControl: 'public,max-age=5184000'
+        };
+
+        let uploadTask = filesRef(file.name).put(file, newMetadata);
         self.uploading = true;
 
         uploadTask.on('state_changed', function(snapshot){

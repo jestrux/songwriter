@@ -9,14 +9,19 @@ const app  = initializeApp({
     messagingSenderId: "675307021913"
 })
 
-// const db = firebase.firestore()
-export const db = app.firestore();
-export const storage = app.storage();
-const settings = { timestampsInSnapshots: true };
-db.settings(settings);
+const firestore = app.firestore();
+const settings = {
+    timestampsInSnapshots: true
+};
+firestore.settings(settings);
+firestore.enablePersistence();
 
 export const auth = app.auth();
-export const linksRef = db.collection("link_urls");
+
+export const db = firestore;
+export const linksRef = firestore.collection("link_urls");
+
+export const storage = app.storage();
 export const filesRef = function(name) {
     return storage.ref("audios/"+name);
 }
