@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, protocol, BrowserWindow } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain, Menu } from 'electron'
 import * as path from 'path'
 import { format as formatUrl } from 'url'
 import {
@@ -9,14 +9,126 @@ import {
 } from 'vue-cli-plugin-electron-builder/lib'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
+var template = [{
+  label: 'Song Writer',
+  submenu: [
+    {
+      label: 'About Song Writer',
+      selector: 'orderFrontStandardAboutPanel:'
+    }
+  ]
+},
+{
+  label: 'Edit',
+  submenu: [
+    {
+      label: 'Undo',
+      accelerator: 'Command+Z',
+      selector: 'undo:'
+    },
+    {
+      label: 'Redo',
+      accelerator: 'Shift+Command+Z',
+      selector: 'redo:'
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Cut',
+      accelerator: 'Command+X',
+      selector: 'cut:'
+    },
+    {
+      label: 'Copy',
+      accelerator: 'Command+C',
+      selector: 'copy:'
+    },
+    {
+      label: 'Paste',
+      accelerator: 'Command+V',
+      selector: 'paste:'
+    },
+    {
+      label: 'Select All',
+      accelerator: 'Command+A',
+      selector: 'selectAll:'
+    },
+  ]
+},
+{
+  label: 'View',
+  submenu: [
+    {
+      label: 'Reload',
+      accelerator: 'Command+R',
+      click: function() { BrowserWindow.getFocusedWindow().reloadIgnoringCache(); }
+    },
+    {
+      label: 'Toggle DevTools',
+      accelerator: 'Alt+Command+I',
+      click: function() { BrowserWindow.getFocusedWindow().toggleDevTools(); }
+    },
+  ]
+},
+{
+  label: 'Window',
+  submenu: [
+    {
+      label: 'Minimize',
+      accelerator: 'Command+M',
+      selector: 'performMiniaturize:'
+    },
+    {
+      label: 'Close',
+      accelerator: 'Command+W',
+      selector: 'performClose:'
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Bring All to Front',
+      selector: 'arrangeInFront:'
+    },
+  ]
+},
+{
+  label: 'Help',
+  submenu: []
+}];
+
+const menu = Menu.buildFromTemplate(template);
+// Menu.setApplicationMenu(menu);
+
 // global reference to mainWindow (necessary to prevent window from being garbage collected)
 let mainWindow
 
 // Standard scheme must be registered before the app is ready
 protocol.registerStandardSchemes(['app'], { secure: true })
-function createMainWindow () {
-  const window = new BrowserWindow({ width: 1200, height: 800, backgroundColor: "#252525" })
 
+ipcMain.on("close", () => {
+  console.log("Close triggered");
+  mainWindow.close();
+})
+
+ipcMain.on("minimize", () => {
+  console.log("minimize triggered");
+  mainWindow.minimize();
+})
+
+ipcMain.on("maximize", () => {
+  console.log("maximize triggered");
+  if(mainWindow.isMaximized()){
+    mainWindow.unmaximize();
+  }else{
+    mainWindow.maximize();
+  }
+})
+
+function createMainWindow () {
+  const window = new BrowserWindow({ width: 1240, height: 800, backgroundColor: "white", frame: false })
+  window.setMenu(menu);
   if (isDevelopment) {
     window.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
     // if (!process.env.IS_TEST) window.webContents.openDevTools()
@@ -34,7 +146,7 @@ function createMainWindow () {
 
   window.on('closed', () => {
     mainWindow = null
-  })
+  });
 
   window.webContents.on('devtools-opened', () => {
     window.focus()

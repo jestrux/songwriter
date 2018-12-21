@@ -13,7 +13,7 @@
     }
 
     #detail.no-song:before {
-        content: "Click a song to show it here.";
+        content: "Click a song to view it here.";
         position: absolute;
         top: 0;
         left: 0;
@@ -42,7 +42,7 @@
       padding: 0 3em;
     }
 
-    textarea{
+    #songEdit{
       width: 100%;
       resize: none;
       font-family: 'Courier New', Courier, monospace;
@@ -50,6 +50,7 @@
       line-height: 1.5;
       border: none;
       outline: none;
+      min-height: calc(100vh - 90px);
     }
 
     #audios{
@@ -69,6 +70,10 @@
       border-bottom: 1px solid #eee;
     }
 
+    h2{
+      outline: none;
+    }
+
     h3{
       flex: 1;
       margin: 0;
@@ -76,12 +81,12 @@
     }
 
     #title button{
-        padding: 1em;
-        border: 1px solid #ddd;
-        background: transparent;
-        border-radius: 3px;
-        outline: none;
-        line-height: 0;
+      padding: 1em;
+      border: 1px solid #ddd;
+      background: transparent;
+      border-radius: 3px;
+      outline: none;
+      line-height: 0;
     }
     
     #audioListWrapper{
@@ -112,13 +117,18 @@
   <div id="detail" :class="{'no-song': !song.path}">
     <div id="wrapper">
       <div id="lyrics">
-        <h2>{{song.title}}</h2>
+        <h2 v-contenteditable:title="editTitle"
+          @keyup="saveSong"></h2>
 
-        <textarea-autosize
+        <div id="songEdit" 
+          v-contenteditable:lyrics="editing"
+          @keyup="saveSong" />
+
+        <!-- <textarea-autosize
           id="songEdit"
           v-model="lyrics"
           placeholder="Enter lyrics here...."
-          @keyup.native="saveSong"/>
+          @keyup.native="saveSong"/> -->
       </div>
 
       <div id="audios">
@@ -149,8 +159,12 @@
 </template>
 
 <script>
+  import Vue from 'vue';
   import { db } from "../firebase";
   import _ from 'lodash'
+  import contenteditableDirective from 'vue-contenteditable-directive'
+  
+  Vue.use(contenteditableDirective)
 
   import AudioUploader from "./AudioUploader";
   import AudioRecorder from "./AudioRecorder";
@@ -167,6 +181,8 @@
 
     data: function() {
       return{
+          editing: true,
+          editTitle: true,
           hovered: false,
           audios: [],
           cursrc: "",
@@ -182,23 +198,33 @@
           if(!newsong || !oldsong || (newsong.path != oldsong.path)){
             this.cursrc = ""; //clean out audio player when new song comes in
             this.audios = [];
-          }
-          
-          if(!newsong.path)
-            return;
 
-          this.fetchAudios();
+            this.title = newsong && newsong.title ? newsong.title : "";
+            this.lyrics = newsong && newsong.description ? newsong.description : "";
+
+            if(newsong && newsong.path){
+              this.fetchAudios();
+            }
+          }
         }
       }
     },
 
     computed:{
+      title: {
+        get: function(){
+          return this.song && this.song.title ? this.song.title : "";
+        },
+        set: function(title){
+          this.song.title = title;
+        }
+      },
       song_html: function(){
         return this.song && this.song.description ? this.song.description.replace(/\n/g, "<br />") : "";
       },
       lyrics: {
         get: function(){
-          return this.song && this.song.description ? this.song.description : null;
+          return this.song && this.song.description ? this.song.description : "";
         },
         set: function(lyrics){
           this.song.description = lyrics;
@@ -210,7 +236,7 @@
       addAudio: function(){
 
       },
-      fetchAudios: function(url){
+      fetchAudios: function(){
         var self = this;
         audiosRef = db.collection(this.song.path + "/audios");
 
@@ -233,7 +259,7 @@
             .catch(function (error) {
                 console.log("Error getting documents: ", error);
                 // reject(error);
-                resolve([]);
+                // resolve([]);
             });
       },
       pushAudio: function(name, url){
@@ -253,18 +279,19 @@
           });
       },
       saveSong: _.debounce(
-        function () {
-          this.song.last_modified = new Date();
-          console.log("Saving song...");
+        function (e) {
+          this.song.last_modified = new Date().getTime();
+          this.song.title = this.title;
+          this.song.description = this.lyrics;
+          console.log("Saving song...", e);
           db.doc(this.song.path).set(this.song)
-          .then(function() {
+            .then(function() {
               console.log("Song saved!");
-          })
-          .catch(function(error) {
+            })
+            .catch(function(error) {
               console.error("Error saving document: ", error);
-          });
-        }, 2000
-      )
+            });
+        }, 2000)
     },
     components: {
       'audio-uploader': AudioUploader,

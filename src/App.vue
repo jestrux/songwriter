@@ -27,8 +27,6 @@
   #app{
     width: 100vw;
     height: 100vh;
-    max-width: 1400px;
-    max-height: 980px;
     display: flex;
     background: #fff;
     border: 1px solid #ddd;
@@ -51,7 +49,8 @@
 
 <template>
   <div id="wrapper">
-    <div id="loader" v-if="!user_fetched">
+    
+    <div id="loader" v-if="!user_fetched" style="background: #fff !important; color: #252525;">
         <span></span>
         Loading...
     </div>
@@ -59,8 +58,12 @@
     <template v-if="user_fetched">
       <div id="appWrapper" v-if="!no_user">
           <div id="app">
-              <song-list :userid="user.id" :username="user.name" :userimage="user.image"
-                        @logout="logout" @viewsong="viewSong"/>
+              <song-list :userid="user.id" 
+                :username="user.name" 
+                :userimage="user.image"
+                @logout="logout" 
+                @viewsong="viewSong"/>
+
               <song-detail :song="cursong"></song-detail>
           </div>
       </div>
