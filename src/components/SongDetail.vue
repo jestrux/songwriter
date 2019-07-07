@@ -37,9 +37,43 @@
 
     #lyrics{
       flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
       height: 100vh;
-      overflow: auto;
-      padding: 0 3em;
+    }
+
+    #songDetailTitle{
+      display: flex;
+      align-items: center;
+      min-height: 63px;
+      border-bottom: 1px solid #ddd;
+      padding: .5em 2em;
+      z-index: 1;
+      background: #fff;
+      -webkit-app-region: drag !important;
+    }
+
+    #songDetailTitle button{
+      border: none;
+      background: transparent;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      outline: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1
+    }
+
+    #songDetailTitle button:active{
+      background: #eee;
+    }
+
+    #songDetailTitle button svg{
+      height: 20px;
+      width: 20px;
     }
 
     #songEdit{
@@ -50,7 +84,10 @@
       line-height: 1.5;
       border: none;
       outline: none;
-      min-height: calc(100vh - 90px);
+      padding: 1em 2em;
+      flex: 1;
+      /* min-height: calc(100vh - 90px); */
+      overflow: auto;
     }
 
     #audios{
@@ -58,7 +95,7 @@
       flex-direction: column;
       flex-shrink: 0;
       flex-basis: 300px;
-      border-left: 1px solid #eee;
+      border-left: 1px solid #ddd;
       height: 100vh;
     }
     
@@ -67,11 +104,16 @@
       display: flex;
       align-items: center;
       height: 63px;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid #ddd;
+      -webkit-app-region: drag !important;
     }
 
     h2{
       outline: none;
+      margin: 0;
+      padding: 0;
+      flex: 1;
+      max-width: calc(100% - 45px);
     }
 
     h3{
@@ -117,8 +159,16 @@
   <div id="detail" :class="{'no-song': !song.path}">
     <div id="wrapper">
       <div id="lyrics">
-        <h2 v-contenteditable:title="editTitle"
-          @keyup="saveSong"></h2>
+        <div id="songDetailTitle">
+          <h2 v-contenteditable:title="editTitle"
+            @keyup="saveSong"></h2>
+
+          <button @click="toggleFavorite()">
+            <!-- {{ song.liked }} -->
+            <svg v-if="!song.liked" viewBox="0 0 24 24"><path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"/></svg>
+            <svg v-else viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          </button>
+        </div>
 
         <div id="songEdit" 
           v-contenteditable:lyrics="editing"
@@ -196,6 +246,7 @@
         deep: true,
         handler: function(newsong, oldsong){
           if(!newsong || !oldsong || (newsong.path != oldsong.path)){
+            console.log(newsong);
             this.cursrc = ""; //clean out audio player when new song comes in
             this.audios = [];
 
@@ -277,6 +328,15 @@
           .catch(function(error) {
             console.error("Error saving audio", error);
           });
+      },
+      async toggleFavorite(){
+        try {
+          const liked = !this.song.liked;
+          await db.doc(this.song.path).set({...this.song, liked});
+          this.$set(this.song, 'liked', liked);
+        } catch (err) {
+          console.error("Error when liking song: ", error); 
+        }
       },
       saveSong: _.debounce(
         function (e) {
