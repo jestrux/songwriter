@@ -231,23 +231,28 @@
 
         <svg class="order-by" @click="setOrder('last_modified')" v-if="order.by === 'title'" width="22" height="22" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M0 0h24v24H0z" fill="none"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
         <svg class="order-by" @click="setOrder('title')" v-if="order.by === 'last_modified'" width="22" height="22" viewBox="0 0 24 24"><path d="M15.75 5h-1.5L9.5 16h2.1l.9-2.2h5l.9 2.2h2.1L15.75 5zm-2.62 7L15 6.98 16.87 12h-3.74zM6 19.75l3-3H7V4.25H5v12.5H3l3 3z"/><path fill="none" d="M0 0h24v24H0z"/></svg>
+
+        <svg style="fill: #555" @click="favoritesOnly = !favoritesOnly" v-if="!favoritesOnly" viewBox="0 0 24 24"><path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"/></svg>
+        <svg style="fill: #555" @click="favoritesOnly = !favoritesOnly" v-else viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
     </div>
 
     <div id="songs" :class="{'no-songs': !songs || !songs.length || !filteredSongs || !filteredSongs.length}" :empty="empty_message">
-        <article v-for="(song, index) in filteredSongs" 
-            :class="{'active': curidx === song.id, 'unsaved': !song.path}"
-            :key="index" @click="viewSong(song)">
-            <h3>{{song.title}}</h3>
-            <p>
-                <template v-if="song.description">
-                    {{song.description}}
-                </template>
+        <template v-for="(song, index) in filteredSongs">
+            <article v-if="song.liked || !favoritesOnly"
+                :class="{'active': curidx === song.id, 'unsaved': !song.path}"
+                :key="index" @click="viewSong(song)">
+                <h3>{{song.title}}</h3>
+                <p>
+                    <template v-if="song.description">
+                        {{song.description}}
+                    </template>
 
-                <span v-else style="opacity: 0.7">
-                    This song has no lyrics.
-                </span>
-            </p>
-        </article>
+                    <span v-else style="opacity: 0.7">
+                        This song has no lyrics.
+                    </span>
+                </p>
+            </article>
+        </template>
     </div>
   </div>
 </template>
@@ -274,6 +279,7 @@
             return{
                 songs: [],
                 order: {by: "title", dir: "asc"},
+                favoritesOnly: false,
                 newsong: "",
                 query: "",
                 curidx: -1,
