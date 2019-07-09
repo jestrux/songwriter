@@ -54,6 +54,10 @@
       -webkit-app-region: drag !important;
     }
 
+    #detail.no-song #songDetailTitle{
+      display: none;
+    }
+
     #songDetailTitle button{
       border: none;
       background: transparent;
@@ -334,7 +338,7 @@
           const liked = !this.song.liked;
           await db.doc(this.song.path).set({...this.song, liked});
           this.$set(this.song, 'liked', liked);
-        } catch (err) {
+        } catch (error) {
           console.error("Error when liking song: ", error); 
         }
       },
