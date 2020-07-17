@@ -24,7 +24,7 @@
     "@vue/cli-service": "^3.0.0-rc.12",
     "electron": "^2.0.2",
     "firebase": "^5.4.0",
-    "lodash": "^4.17.10",
+    "lodash": "^4.17.19",
     "vue": "^2.5.17",
     "vue-cli-plugin-electron-builder": "^1.0.0-beta.6",
     "vue-template-compiler": "^2.5.17",
